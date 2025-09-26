@@ -664,7 +664,7 @@
         }
 
         // Save new weight
-        function saveWeight(newWeight) {
+        async function saveWeight(newWeight) {
             const weight = parseFloat(newWeight);
             if (isNaN(weight) || weight <= 0) {
                 cancelEdit();
@@ -677,8 +677,8 @@
             // Calculate age in weeks from birth date
             const ageWeeks = calculateAgeWeeks(today);
 
-            // If it's the same day, update the existing entry, otherwise add new
-            if (latest.date === today) {
+            // Update local data first
+            if (latest && latest.date === today) {
                 latest.weight = weight;
                 latest.ageWeeks = ageWeeks;
             } else {
@@ -689,10 +689,33 @@
                 });
             }
 
+            // Save to localStorage
             saveData();
             updateDisplay();
             updateChart();
             cancelEdit();
+
+            // Also update the GitHub repo via Cloudflare Worker
+            try {
+                const response = await fetch('https://bubs.unbleachedau.workers.dev', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        weight: weight,
+                        date: today
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('Weight successfully updated in GitHub');
+                } else {
+                    console.error('Failed to update GitHub:', await response.text());
+                }
+            } catch (error) {
+                console.error('Error updating GitHub:', error);
+            }
         }
 
         // Cancel editing
