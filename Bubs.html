@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubba</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }3
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .age-counter {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #404040;
+        }
+
+        .age-display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .age-display:hover {
+            background-color: #404040;
+        }
+
+        .age-details {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #1e1e1e;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+        }
+
+        .age-details.show {
+            display: block;
+        }
+
+        .age-item {
+            margin: 8px 0;
+            font-size: 1.1em;
+            color: #b0b0b0;
+        }
+
+        .age-label {
+            font-weight: bold;
+            color: #e0e0e0;
+        }
+
+        .birth-date {
+            color: #b0b0b0;
+            font-size: 1.1em;
+        }
+
+        .current-weight {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            border: 1px solid #404040;
+        }
+
+        .weight-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ff6b6b;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 8px;
+            transition: background-color 0.2s;
+        }
+
+        .weight-display:hover {
+            background-color: #404040;
+        }
+
+        .weight-display.editing {
+            outline: 2px solid #ff6b6b;
+            outline-offset: 2px;
+        }
+
+        .nutrition-recommendation {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #404040;
+        }
+
+        .nutrition-title {
+            color: #e0e0e0;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .kibble-amount {
+            font-size: 2em;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+
+        .nutrition-details {
+            color: #b0b0b0;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .date-display {
+            color: #b0b0b0;
+            font-size: 1.1em;
+            margin-top: 10px;
+        }
+
+        .chart-container {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+            border: 1px solid #404040;
+        }
+
+        .chart-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #e0e0e0;
+            font-size: 1.3em;
+        }
+
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .save-btn:hover {
+            background-color: #45a049;
+        }
+
+        .cancel-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            margin-left: 5px;
+        }
+
+        .cancel-btn:hover {
+            background-color: #da190b;
+        }
+    </style>
+</head>
+<body>
+    <div class="age-counter">
+        <div class="age-display" id="ageDisplay" onclick="toggleAgeDetails()"></div>
+        <div class="birth-date">Born: May 25, 2025</div>
+        <div class="age-details" id="ageDetails">
+            <div class="age-item"><span class="age-label">Days:</span> <span id="ageDays"></span></div>
+            <div class="age-item"><span class="age-label">Months:</span> <span id="ageMonths"></span></div>
+            <div class="age-item"><span class="age-label">Years:</span> <span id="ageYears"></span></div>
+        </div>
+    </div>
+
+    <div class="current-weight">
+        <div id="weightDisplay" class="weight-display" onclick="editWeight()"></div>
+        <div class="date-display" id="dateDisplay"></div>
+    </div>
+
+    <div class="nutrition-recommendation">
+        <div class="nutrition-title">Daily Kibble Recommendation</div>
+        <div class="kibble-amount" id="kibbleAmount"></div>
+        <div class="nutrition-details" id="nutritionDetails"></div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Weight Progress Over Time</div>
+        <canvas id="weightChart" width="400" height="200"></canvas>
+    </div>
+
+    <script>
+        const birthDate = new Date('2025-05-25');
+
+        // Nutrition calculation parameters
+        // Based on AAFCO/FEDIAF standards with breed-specific adjustments
+        // For: Domestic Shorthair with Burmese/Oriental/Siamese influences, Active lifestyle
+        const nutritionParams = {
+            foodEnergyDensity: 3.8, // kcal/g for dry kibble
+            breedMultiplier: 1.1 // Active breeds need ~10% more energy
+        };
+
+        // Growth pattern data for Burmese/Oriental/Siamese mix
+        const growthParams = {
+            neuterAge: 22, // weeks (5.5 months)
+            postNeuterReduction: 0.85, // 15% reduction in growth rate post-neuter
+            seasonalVariation: 0.05, // 5% seasonal weight fluctuation
+            matureWeight: 5.2, // kg - target adult weight for this mix
+            growthPhases: {
+                // Growth rates in kg/week by age phase
+                rapid: { minWeeks: 4, maxWeeks: 16, rate: 0.1 }, // ~100g/week
+                moderate: { minWeeks: 17, maxWeeks: 36, rate: 0.06 }, // slowing
+                slow: { minWeeks: 37, maxWeeks: 78, rate: 0.02 }, // final growth
+                mature: { minWeeks: 79, maxWeeks: 999, rate: 0.001 } // maintenance
+            }
+        };
+
+        // Calculate age in weeks from birth date
+        function calculateAgeWeeks(date) {
+            const targetDate = new Date(date);
+            const daysDiff = (targetDate - birthDate) / (1000 * 60 * 60 * 24);
+            return Math.floor(daysDiff / 7);
+        }
+
+        // Calculate expected growth rate for current age
+        function getGrowthRate(ageWeeks, isPostNeuter = false) {
+            let baseRate;
+
+            // Find appropriate growth phase
+            for (const [phase, params] of Object.entries(growthParams.growthPhases)) {
+                if (ageWeeks >= params.minWeeks && ageWeeks <= params.maxWeeks) {
+                    baseRate = params.rate;
+                    break;
+                }
+            }
+
+            if (!baseRate) baseRate = 0.001; // fallback for very old cats
+
+            // Apply post-neuter reduction if applicable
+            if (isPostNeuter && ageWeeks >= growthParams.neuterAge) {
+                baseRate *= growthParams.postNeuterReduction;
+            }
+
+            return baseRate;
+        }
+
+        // Calculate actual growth rate from recent weight entries
+        function calculateActualGrowthRate() {
+            if (weightHistory.length < 2) {
+                // Not enough data, use breed average for current age
+                const currentAge = calculateAgeWeeks(new Date().toISOString().split('T')[0]);
+                return getGrowthRate(currentAge, currentAge >= growthParams.neuterAge);
+            }
+
+            // Calculate growth rate from recent entries (last 3-4 weeks if available)
+            const recentEntries = weightHistory.slice(-Math.min(4, weightHistory.length));
+            let totalGrowth = 0;
+            let totalWeeks = 0;
+
+            for (let i = 1; i < recentEntries.length; i++) {
+                const weightGain = recentEntries[i].weight - recentEntries[i-1].weight;
+                const weeksElapsed = recentEntries[i].ageWeeks - recentEntries[i-1].ageWeeks;
+
+                if (weeksElapsed > 0) {
+                    totalGrowth += weightGain;
+                    totalWeeks += weeksElapsed;
+                }
+            }
+
+            const actualGrowthRate = totalWeeks > 0 ? totalGrowth / totalWeeks : 0;
+
+            // Get breed-expected rate for comparison
+            const currentAge = weightHistory[weightHistory.length - 1].ageWeeks;
+            const expectedRate = getGrowthRate(currentAge, currentAge >= growthParams.neuterAge);
+
+            // Blend actual rate with expected rate (70% actual, 30% expected)
+            // This prevents wild projections while adapting to actual growth
+            const blendedRate = (actualGrowthRate * 0.7) + (expectedRate * 0.3);
+
+            return Math.max(0, blendedRate); // Ensure non-negative growth
+        }
+
+        // Calculate growth trend to adjust future projections
+        function getGrowthTrend() {
+            if (weightHistory.length < 3) return 1.0; // No trend data
+
+            // Compare recent growth to earlier growth
+            const recentEntries = weightHistory.slice(-3);
+            const earlierEntries = weightHistory.slice(-Math.min(6, weightHistory.length), -3);
+
+            if (earlierEntries.length < 2) return 1.0;
+
+            // Calculate recent vs earlier growth rates
+            const recentRate = calculateGrowthRateFromEntries(recentEntries);
+            const earlierRate = calculateGrowthRateFromEntries(earlierEntries);
+
+            if (earlierRate === 0) return 1.0;
+
+            // Return trend multiplier (1.0 = same rate, >1.0 = accelerating, <1.0 = slowing)
+            return Math.max(0.5, Math.min(1.5, recentRate / earlierRate));
+        }
+
+        function calculateGrowthRateFromEntries(entries) {
+            if (entries.length < 2) return 0;
+
+            let totalGrowth = 0;
+            let totalWeeks = 0;
+
+            for (let i = 1; i < entries.length; i++) {
+                const weightGain = entries[i].weight - entries[i-1].weight;
+                const weeksElapsed = entries[i].ageWeeks - entries[i-1].ageWeeks;
+
+                if (weeksElapsed > 0) {
+                    totalGrowth += weightGain;
+                    totalWeeks += weeksElapsed;
+                }
+            }
+
+            return totalWeeks > 0 ? totalGrowth / totalWeeks : 0;
+        }
+
+        // Estimate future weight based on actual growth pattern + breed expectations
+        function estimateWeight(currentWeight, currentAge, targetAge) {
+            if (targetAge <= currentAge) return currentWeight;
+
+            const actualGrowthRate = calculateActualGrowthRate();
+            const growthTrend = getGrowthTrend();
+            let projectedWeight = currentWeight;
+
+            // Calculate weekly growth with adaptive rate
+            for (let week = currentAge + 1; week <= targetAge; week++) {
+                let weeklyRate = actualGrowthRate;
+
+                // Apply growth trend (gradual slowing/acceleration)
+                const weeksAhead = week - currentAge;
+                const trendFactor = Math.pow(growthTrend, weeksAhead * 0.3);
+                weeklyRate *= trendFactor;
+
+                // Add some natural variation (±15% for realism)
+                const variation = (Math.random() - 0.5) * 0.3;
+                const weeklyGain = weeklyRate * (1 + variation);
+
+                projectedWeight += weeklyGain;
+
+                // Don't exceed realistic mature weight
+                if (projectedWeight > growthParams.matureWeight) {
+                    projectedWeight = growthParams.matureWeight;
+                    break;
+                }
+
+                // Don't allow negative growth to result in weight loss (kittens shouldn't lose weight)
+                if (weeklyGain < -0.05) {
+                    projectedWeight = projectedWeight + 0.01; // Minimal gain instead
+                }
+            }
+
+            return Math.round(projectedWeight * 100) / 100; // Round to 2 decimal places
+        }
+
+        // Generate projected weight data points
+        function generateProjections() {
+            const currentAge = calculateAgeWeeks(new Date().toISOString().split('T')[0]);
+            const currentWeight = weightHistory[weightHistory.length - 1].weight;
+            const projections = [];
+
+            // Generate 3 weeks of projections
+            for (let i = 1; i <= 3; i++) {
+                const futureAge = currentAge + i;
+                const futureDate = new Date();
+                futureDate.setDate(futureDate.getDate() + (i * 7));
+
+                const estimatedWeight = estimateWeight(currentWeight, currentAge, futureAge);
+
+                projections.push({
+                    date: futureDate.toISOString().split('T')[0],
+                    weight: estimatedWeight,
+                    ageWeeks: futureAge,
+                    isProjected: true
+                });
+            }
+
+            return projections;
+        }
+
+        /**
+         * Calculate Resting Energy Requirement (RER)
+         * Formula: 70 × (weight in kg)^0.75
+         */
+        function calculateRER(weightKg) {
+            if (!weightKg || weightKg <= 0) return 0;
+            return 70 * Math.pow(weightKg, 0.75);
+        }
+
+        /**
+         * Get DER multiplier based on kitten age in weeks
+         */
+        function getDERMultiplier(ageWeeks) {
+            if (ageWeeks < 17) { // 0-4 months (16 weeks = 4 months exactly)
+                return 2.5;
+            } else if (ageWeeks <= 52) { // 4-12 months
+                return 2.0;
+            } else { // Adult
+                return 1.4; // Active adult
+            }
+        }
+
+        /**
+         * Calculate Daily Energy Requirement (DER)
+         */
+        function calculateDER(rer, multiplier, breedMultiplier = 1.0) {
+            return rer * multiplier * breedMultiplier;
+        }
+
+        /**
+         * Get kibble recommendation based on weight and age
+         */
+        function getKibbleRecommendation(weightKg, ageWeeks) {
+            // Calculate energy requirements
+            const rer = calculateRER(weightKg);
+            const derMultiplier = getDERMultiplier(ageWeeks);
+            const der = calculateDER(rer, derMultiplier, nutritionParams.breedMultiplier);
+
+            // Convert to food amount in grams
+            const dailyAmount = Math.round(der / nutritionParams.foodEnergyDensity);
+
+            // Determine life stage for display
+            let lifeStage;
+            if (ageWeeks < 17) { // 0-4 months
+                lifeStage = 'kitten_0_4';
+            } else if (ageWeeks <= 52) { // 4-12 months
+                lifeStage = 'kitten_4_12';
+            } else {
+                lifeStage = 'adult_active';
+            }
+
+            return {
+                amount: dailyAmount,
+                lifeStage: lifeStage,
+                rer: Math.round(rer),
+                der: Math.round(der),
+                multiplier: derMultiplier
+            };
+        }
+
+        // Weight history will be loaded from JSON file
+        let weightHistory = [];
+
+        let chart;
+        let isEditing = false;
+        let showingAgeDetails = false;
+
+        // Load data from JSON file, fallback to localStorage
+        async function loadData() {
+            try {
+                // First try to fetch from JSON file
+                const response = await fetch('./weight-data.json');
+                if (response.ok) {
+                    const data = await response.json();
+                    // Process the JSON data to add ageWeeks
+                    weightHistory = data.map(entry => ({
+                        ...entry,
+                        ageWeeks: calculateAgeWeeks(entry.date)
+                    }));
+                    return;
+                }
+            } catch (error) {
+                console.warn('Failed to load weight data from JSON:', error);
+            }
+
+            // Fallback to localStorage if JSON fetch fails
+            const saved = localStorage.getItem('kittenWeights');
+            if (saved) {
+                weightHistory = JSON.parse(saved);
+            } else {
+                // Ultimate fallback - empty array
+                weightHistory = [];
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('kittenWeights', JSON.stringify(weightHistory));
+        }
+
+        // Toggle age details visibility
+        function toggleAgeDetails() {
+            showingAgeDetails = !showingAgeDetails;
+            const detailsElement = document.getElementById('ageDetails');
+
+            if (showingAgeDetails) {
+                detailsElement.classList.add('show');
+            } else {
+                detailsElement.classList.remove('show');
+            }
+        }
+
+        // Update age display
+        function updateAgeDisplay() {
+            const today = new Date();
+            const daysDiff = (today - birthDate) / (1000 * 60 * 60 * 24);
+            const weeks = Math.floor(daysDiff / 7);
+            const days = Math.floor(daysDiff % 7);
+
+            // Main age display (weeks and days)
+            let ageText = '';
+            if (weeks > 0) {
+                ageText += `${weeks} week${weeks !== 1 ? 's' : ''}`;
+                if (days > 0) {
+                    ageText += ` ${days} day${days !== 1 ? 's' : ''}`;
+                }
+            } else {
+                ageText = `${days} day${days !== 1 ? 's' : ''}`;
+            }
+            ageText += ' old';
+            document.getElementById('ageDisplay').textContent = ageText;
+
+            // Additional age formats
+            const totalDays = Math.floor(daysDiff);
+
+            // Calculate months more accurately
+            const msPerMonth = 1000 * 60 * 60 * 24 * 30.44; // Average month length
+            const totalMonths = daysDiff / 30.44;
+
+            const totalYears = (daysDiff / 365.25); // Account for leap years
+
+            document.getElementById('ageDays').textContent = `${totalDays} days old`;
+            document.getElementById('ageMonths').textContent = `${totalMonths.toFixed(1)} months old`;
+            document.getElementById('ageYears').textContent = `${totalYears.toFixed(2)} years old`;
+        }
+
+        // Update nutrition recommendation
+        function updateNutritionDisplay() {
+            if (weightHistory.length === 0) {
+                document.getElementById('kibbleAmount').textContent = '-- g per day';
+                document.getElementById('nutritionDetails').textContent = 'Add weight data to see recommendations';
+                return;
+            }
+
+            const latest = weightHistory[weightHistory.length - 1];
+
+            // Calculate current age in weeks (not from stored data)
+            const today = new Date();
+            const daysDiff = (today - birthDate) / (1000 * 60 * 60 * 24);
+            const currentAgeWeeks = Math.floor(daysDiff / 7);
+
+            const recommendation = getKibbleRecommendation(latest.weight, currentAgeWeeks);
+
+            document.getElementById('kibbleAmount').textContent = recommendation.amount + 'g per day';
+
+            let stageText;
+            if (recommendation.lifeStage === 'kitten_0_4') {
+                stageText = 'Young kitten (0-4 months)';
+            } else if (recommendation.lifeStage === 'kitten_4_12') {
+                stageText = 'Growing kitten (4-12 months)';
+            } else {
+                stageText = 'Active adult cat';
+            }
+
+            document.getElementById('nutritionDetails').innerHTML =
+                `${stageText} • ${latest.weight}kg • ${currentAgeWeeks} weeks old<br>` +
+                `Active breed (${recommendation.der} kcal/day) • Split into 3-4 meals`;
+        }
+
+        // Display current weight
+        function updateDisplay() {
+            if (weightHistory.length === 0) {
+                document.getElementById('weightDisplay').textContent = 'No data';
+                document.getElementById('dateDisplay').textContent = 'Click to add first weight entry';
+                updateAgeDisplay();
+                updateNutritionDisplay();
+                return;
+            }
+
+            const latest = weightHistory[weightHistory.length - 1];
+            document.getElementById('weightDisplay').textContent = latest.weight + ' kg';
+            document.getElementById('dateDisplay').textContent = 'Last updated: ' + new Date(latest.date).toLocaleDateString();
+            updateAgeDisplay();
+            updateNutritionDisplay();
+        }
+
+        // Edit weight functionality
+        function editWeight() {
+            if (isEditing) return;
+
+            isEditing = true;
+            const weightDisplay = document.getElementById('weightDisplay');
+            const currentWeight = weightHistory[weightHistory.length - 1].weight;
+            const originalText = weightDisplay.textContent;
+
+            // Make the element editable
+            weightDisplay.contentEditable = true;
+            weightDisplay.classList.add('editing');
+            weightDisplay.textContent = currentWeight;
+
+            // Focus and select all text
+            weightDisplay.focus();
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(weightDisplay);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            // Handle keypress events
+            function handleKeyPress(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const newWeight = parseFloat(weightDisplay.textContent.trim());
+                    if (!isNaN(newWeight) && newWeight !== currentWeight && newWeight > 0) {
+                        saveWeight(newWeight);
+                    } else {
+                        cancelEdit();
+                    }
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelEdit();
+                }
+            }
+
+            // Handle click outside
+            function handleClickOutside(e) {
+                if (!weightDisplay.contains(e.target)) {
+                    cancelEdit();
+                }
+            }
+
+            // Add event listeners
+            weightDisplay.addEventListener('keydown', handleKeyPress);
+            document.addEventListener('click', handleClickOutside);
+
+            // Store cleanup function
+            weightDisplay._cleanup = () => {
+                weightDisplay.removeEventListener('keydown', handleKeyPress);
+                document.removeEventListener('click', handleClickOutside);
+            };
+        }
+
+        // Save new weight
+        function saveWeight(newWeight) {
+            const weight = parseFloat(newWeight);
+            if (isNaN(weight) || weight <= 0) {
+                cancelEdit();
+                return;
+            }
+
+            const today = new Date().toISOString().split('T')[0];
+            const latest = weightHistory[weightHistory.length - 1];
+
+            // Calculate age in weeks from birth date
+            const ageWeeks = calculateAgeWeeks(today);
+
+            // If it's the same day, update the existing entry, otherwise add new
+            if (latest.date === today) {
+                latest.weight = weight;
+                latest.ageWeeks = ageWeeks;
+            } else {
+                weightHistory.push({
+                    date: today,
+                    weight: weight,
+                    ageWeeks: ageWeeks
+                });
+            }
+
+            saveData();
+            updateDisplay();
+            updateChart();
+            cancelEdit();
+        }
+
+        // Cancel editing
+        function cancelEdit() {
+            const weightDisplay = document.getElementById('weightDisplay');
+
+            // Clean up event listeners
+            if (weightDisplay._cleanup) {
+                weightDisplay._cleanup();
+                delete weightDisplay._cleanup;
+            }
+
+            // Reset the display
+            weightDisplay.contentEditable = false;
+            weightDisplay.classList.remove('editing');
+            isEditing = false;
+            updateDisplay();
+        }
+
+        // Create/update chart
+        function updateChart() {
+            const ctx = document.getElementById('weightChart').getContext('2d');
+
+            if (chart) {
+                chart.destroy();
+            }
+
+            // Don't create chart if no data
+            if (weightHistory.length === 0) {
+                return;
+            }
+
+            // Generate projections
+            const projections = generateProjections();
+            const allData = [...weightHistory, ...projections];
+
+            const labels = allData.map(entry => `${entry.ageWeeks} weeks`);
+
+            // Prepare actual data points using age weeks as x-axis
+            const actualData = weightHistory.map(entry => ({
+                x: entry.ageWeeks,
+                y: entry.weight
+            }));
+
+            // Prepare projected data points using age weeks as x-axis
+            const projectedData = projections.map(entry => ({
+                x: entry.ageWeeks,
+                y: entry.weight
+            }));
+
+            // Create connecting point at the last actual data point
+            const lastActual = weightHistory[weightHistory.length - 1];
+            const connectingPoint = {
+                x: lastActual.ageWeeks,
+                y: lastActual.weight
+            };
+
+            chart = new Chart(ctx, {
+                type: 'scatter',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Actual Weight',
+                            data: actualData,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: '#ff6b6b',
+                            borderWidth: 3,
+                            pointBackgroundColor: '#ff6b6b',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 6,
+                            showLine: true,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Projected Weight',
+                            data: [connectingPoint, ...projectedData],
+                            borderColor: '#4CAF50',
+                            backgroundColor: '#4CAF50',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            pointBackgroundColor: '#4CAF50',
+                            pointBorderColor: '#fff',
+                            pointBorderWidth: 2,
+                            pointRadius: 4,
+                            pointStyle: 'triangle',
+                            showLine: true,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Weight (kg)',
+                                color: '#e0e0e0'
+                            },
+                            ticks: {
+                                color: '#b0b0b0'
+                            },
+                            grid: {
+                                color: '#404040'
+                            }
+                        },
+                        x: {
+                            type: 'linear',
+                            title: {
+                                display: true,
+                                text: 'Age (weeks)',
+                                color: '#e0e0e0'
+                            },
+                            ticks: {
+                                color: '#b0b0b0',
+                                callback: function(value) {
+                                    return value + ' weeks';
+                                }
+                            },
+                            grid: {
+                                color: '#404040'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#2d2d2d',
+                            titleColor: '#e0e0e0',
+                            bodyColor: '#b0b0b0',
+                            borderColor: '#404040',
+                            borderWidth: 1,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].parsed.x + ' weeks old';
+                                },
+                                label: function(context) {
+                                    const weight = context.parsed.y.toFixed(2);
+                                    if (context.datasetIndex === 1) {
+                                        return 'Projected: ' + weight + ' kg';
+                                    } else {
+                                        return 'Actual: ' + weight + ' kg';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize app
+        async function init() {
+            await loadData();
+
+            // Only update display if we have weight data
+            if (weightHistory.length > 0) {
+                updateDisplay();
+                updateChart();
+            } else {
+                // Show a message if no data is available
+                document.getElementById('weightDisplay').textContent = 'No data';
+                document.getElementById('dateDisplay').textContent = 'Click to add first weight entry';
+            }
+        }
+
+        // Start the app
+        init();
+    </script>
+</body>
+</html>
