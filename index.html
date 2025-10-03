@@ -18,7 +18,7 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
-        }3
+        }
 
         .header h1 {
             color: #333;
@@ -72,6 +72,15 @@
         .age-label {
             font-weight: bold;
             color: #e0e0e0;
+        }
+
+        .human-years {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #404040;
+            font-size: 1.2em;
+            color: #4CAF50;
+            font-weight: bold;
         }
 
         .birth-date {
@@ -199,6 +208,7 @@
             <div class="age-item"><span class="age-label">Days:</span> <span id="ageDays"></span></div>
             <div class="age-item"><span class="age-label">Months:</span> <span id="ageMonths"></span></div>
             <div class="age-item"><span class="age-label">Years:</span> <span id="ageYears"></span></div>
+            <div class="human-years" id="humanYears"></div>
         </div>
     </div>
 
@@ -555,6 +565,21 @@
             document.getElementById('ageDays').textContent = `${totalDays} days old`;
             document.getElementById('ageMonths').textContent = `${totalMonths.toFixed(1)} months old`;
             document.getElementById('ageYears').textContent = `${totalYears.toFixed(2)} years old`;
+
+            // Calculate human years equivalent using 15:9:4 rule
+            let humanYears = 0;
+            if (totalYears < 1) {
+                // First year: 15 human years
+                humanYears = totalYears * 15;
+            } else if (totalYears < 2) {
+                // Second year: 15 + (remaining * 9)
+                humanYears = 15 + ((totalYears - 1) * 9);
+            } else {
+                // After second year: 15 + 9 + (remaining * 4)
+                humanYears = 15 + 9 + ((totalYears - 2) * 4);
+            }
+
+            document.getElementById('humanYears').textContent = `≈ ${humanYears.toFixed(1)} human years`;
         }
 
         // Update nutrition recommendation
